@@ -1,5 +1,5 @@
 {
-  "name": "graffiti-mongoose",
+  "name": "haozi23333/graffiti-mongoose",
   "version": "6.0.1",
   "description": "Mongoose adapter for graffiti (Node.js GraphQL ORM)",
   "main": "lib/index.js",
