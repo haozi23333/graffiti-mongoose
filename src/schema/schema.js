@@ -107,7 +107,7 @@ function getConnectionField(graffitiModel, type, hooks = {}) {
   };
 }
 
-function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDMutation) {
+function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDMutation, customExportMutations = {}) {
   const { name } = type;
   const { mutation } = hooks;
 
@@ -138,8 +138,8 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
         type: new GraphQLList(createInputObject(field.type.ofType))
       };
     } else if (!(field.type instanceof GraphQLObjectType)
-        && field.name !== 'id' && field.name !== '__v'
-        && (allowMongoIDMutation || field.name !== '_id')) {
+      && field.name !== 'id' && field.name !== '__v'
+      && (allowMongoIDMutation || field.name !== '_id')) {
       inputFields[field.name] = {
         name: field.name,
         type: field.type
@@ -168,7 +168,7 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
   const updateName = `update${name}`;
   const deleteName = `delete${name}`;
 
-  return {
+  const base = {
     [addName]: mutationWithClientMutationId({
       name: addName,
       inputFields,
@@ -220,6 +220,30 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
       mutateAndGetPayload: addHooks(query.getDeleteOneMutateHandler(graffitiModel), mutation)
     })
   };
+  const exportMutations = {};
+  if (customExportMutations[name] && graffitiModel[name]) {
+    Object.keys(customExportMutations[name]).map((key) => {
+      const exportParam = customExportMutations[name][key];
+      if (!exportParam) {
+        throw new Error(`not found function ${key} in modle -> ${name}`);
+      }
+      exportMutations[key] = mutationWithClientMutationId({
+        name: exportParam.alias || key,
+        inputFields: exportParam.inputFields,
+        outputFields: exportParam.outputFields,
+        description: exportParam.description || 'no description',
+        mutateAndGetPayload: async (body) => {
+          const args = Object.keys(exportParam.inputFields).map((key) => body[key]);
+          return graffitiModel.model[key](...args);
+        }
+      });
+      return 1;
+    });
+  }
+  return {
+    ...base,
+    ...exportMutations
+  };
 }
 
 /**
@@ -229,9 +253,9 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
  * @return {Object}
  */
 function getFields(graffitiModels, {
-    hooks = {}, mutation = true, allowMongoIDMutation = false,
-    customQueries = {}, customMutations = {}
-  } = {}) {
+  hooks = {}, mutation = true, allowMongoIDMutation = false,
+  customQueries = {}, customMutations = {}, customExportMutations = {}
+} = {}) {
   const types = type.getTypes(graffitiModels);
   const { viewer, singular } = hooks;
 
@@ -264,7 +288,7 @@ function getFields(graffitiModels, {
       },
       mutations: {
         ...mutations,
-        ...getMutationField(graffitiModel, type, viewerField, hooks, allowMongoIDMutation)
+        ...getMutationField(graffitiModel, type, viewerField, hooks, allowMongoIDMutation, customExportMutations)
       }
     };
   }, {

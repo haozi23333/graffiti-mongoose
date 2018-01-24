@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-expressions */
 
-import { expect } from 'chai';
+import { expect, assert } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLString,
@@ -103,6 +103,36 @@ describe('schema', () => {
           type: GraphQLID
         }
       });
+    });
+  });
+
+  describe('getMutationFieldAndExportStaticFunction', () => {
+    it('should return an test field', function getMutationFieldTest() {
+      this.sandbox.stub(query, 'getAddOneMutateHandler').returns(() => null);
+      this.sandbox.stub(query, 'getUpdateOneMutateHandler').returns(() => null);
+      const graphQLType = types.Qux;
+      const testModel = {};
+      testModel.test = async (qwq) => ({
+        ok: qwq
+      });
+      const fields = getMutationField({ Qux: { model: testModel } }, graphQLType, undefined, undefined, undefined, {
+        Qux: {
+          test: {
+            inputFields: {
+              qwq: {
+                type: GraphQLString
+              }
+            },
+            outputFields: {
+              ok: {
+                type: GraphQLString
+              }
+            },
+            description: 'test qwq'
+          }
+        },
+      });
+      assert(fields.test, 'not found test Mutation');
     });
   });
 

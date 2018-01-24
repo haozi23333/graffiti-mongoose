@@ -4,7 +4,7 @@
   "description": "Mongoose adapter for graffiti (Node.js GraphQL ORM)",
   "main": "lib/index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --compilers js:babel-register 'src/**/*.spec.js'",
+    "test": "set NODE_ENV=test && mocha --compilers js:babel-register src/**/*.spec.js",
     "lint": "eslint src",
     "prepublish": "npm run build",
     "build": "rm -rf lib/* && babel src --ignore *.spec.js --out-dir lib",
