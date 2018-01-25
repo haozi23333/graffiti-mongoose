@@ -221,7 +221,7 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
     })
   };
   const exportMutations = {};
-  if (customExportMutations[name] && graffitiModel[name]) {
+  if (customExportMutations[name]) {
     Object.keys(customExportMutations[name]).map((key) => {
       const exportParam = customExportMutations[name][key];
       if (!exportParam) {
@@ -237,7 +237,6 @@ function getMutationField(graffitiModel, type, viewer, hooks = {}, allowMongoIDM
           return graffitiModel.model[key](...args);
         }
       });
-      return 1;
     });
   }
   return {
